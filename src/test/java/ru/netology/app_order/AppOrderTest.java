@@ -1,44 +1,72 @@
 package ru.netology.app_order;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.codeborne.selenide.Condition.*;
+import static com.codeborne.selenide.Selenide.*;
+
 
 public class AppOrderTest {
-    private WebDriver driver;
 
-    @BeforeAll
-    static void setUpAll() {
-        System.setProperty("webdriver.chrome.driver", "./drivers/chromedriver.exe");
-    }
+    @Test
+    void shouldSeeSuccessMessage() {
+        open("http://localhost:9999");
 
-    @BeforeEach
-    void setUp() {
-        driver = new ChromeDriver();
-    }
+        $("span[data-test-id='name'] input").setValue("Вася Пупкин");
+        $("span[data-test-id='phone'] input").setValue("+79000000000");
+        $("label[data-test-id='agreement']").click();
+        $("button").click();
 
-    @AfterEach
-    void tearDown() {
-        driver.quit();
+        $("p[data-test-id='order-success']").shouldHave(exactText("Ваша заявка успешно отправлена! Наш менеджер свяжется с вами в ближайшее время."));
     }
 
     @Test
-    void shouldTestSomething() {
-        driver.get("http://localhost:9999");
+    void shouldSeeInvalidNameMessage() {
+        open("http://localhost:9999");
 
-        driver.findElement(By.cssSelector("span[data-test-id='name'] input")).sendKeys("Вася Пупкин");
-        driver.findElement(By.cssSelector("span[data-test-id='phone'] input")).sendKeys("+79000000000");
-        driver.findElement(By.cssSelector("label[data-test-id='agreement']")).click();
-        driver.findElement(By.tagName("button")).click();
+        $("span[data-test-id='name'] input").setValue("Vasya Pupkin");
+        $("span[data-test-id='phone'] input").setValue("+79000000000");
+        $("label[data-test-id='agreement']").click();
+        $("button").click();
 
-        String text = driver.findElement(By.cssSelector("p[data-test-id='order-success']")).getText();
-        assertEquals("Ваша заявка успешно отправлена! Наш менеджер свяжется с вами в ближайшее время.", text.trim());
+       $("span[data-test-id='name'] span.input__sub").shouldHave(exactText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."));
+    }
+
+    @Test
+    void shouldSeeEmptyNameFieldMessage() {
+        open("http://localhost:9999");
+
+        $("span[data-test-id='name'] input").setValue("");
+        $("span[data-test-id='phone'] input").setValue("+79000000000");
+        $("label[data-test-id='agreement']").click();
+        $("button").click();
+
+        $("span[data-test-id='name'] span.input__sub").shouldHave(exactText("Поле обязательно для заполнения"));
+    }
+
+    @Test
+    void shouldSeeInvalidPhoneMessage() {
+        open("http://localhost:9999");
+
+        $("span[data-test-id='name'] input").setValue("Вася Пупкин");
+        $("span[data-test-id='phone'] input").setValue("79000000000");
+        $("label[data-test-id='agreement']").click();
+        $("button").click();
+
+        $("span[data-test-id='phone'] span.input__sub").shouldHave(exactText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."));
+    }
+
+    @Test
+    void shouldSeeEmptyPhoneFieldMessage() {
+        open("http://localhost:9999");
+
+        $("span[data-test-id='name'] input").setValue("Вася Пупкин");
+        $("span[data-test-id='phone'] input").setValue("");
+        $("label[data-test-id='agreement']").click();
+        $("button").click();
+
+        $("span[data-test-id='phone'] span.input__sub").shouldHave(exactText("Поле обязательно для заполнения"));
     }
 
 }
